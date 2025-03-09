@@ -10,7 +10,7 @@ import { ScrollTrigger, MotionPathPlugin, TextPlugin } from "gsap/all";
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin, TextPlugin);
 
-const years = ["2002", "2013", "2013", "2025"]; // List of years
+const years = ["2002", "2013", "2025"]; // List of years
 
 const ExplodingText = ({ text, onAnimationEnd }) => {
   const textRef = useRef();
