@@ -3,10 +3,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
-import * as THREE from "three";
 import gsap from "gsap";
 import IndianFlag from "./components/indianflag";
 import IndianPlayer from "./components/players";
+import { ScrollTrigger, MotionPathPlugin, TextPlugin } from "gsap/all";
+
+gsap.registerPlugin(ScrollTrigger, MotionPathPlugin, TextPlugin);
 
 const years = ["2002", "2013", "2013", "2025"]; // List of years
 
