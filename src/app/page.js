@@ -1,101 +1,124 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useRef, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
+import * as THREE from "three";
+import gsap from "gsap";
+import IndianFlag from "./components/indianflag";
+import IndianPlayer from "./components/players";
+
+const years = ["2002", "2013", "2013", "2025"]; // List of years
+
+const ExplodingText = ({ text, onAnimationEnd }) => {
+  const textRef = useRef();
+  const particlesRef = useRef([]);
+  const [particles, setParticles] = useState([]);
+
+  useEffect(() => {
+    createParticles();
+    gsap.to(textRef.current.material, { opacity: 1, duration: 0.5 });
+    setTimeout(explodeParticles, 1000);
+  }, [text]);
+
+  const createParticles = () => {
+    const particleArray = [];
+    for (let i = 0; i < 100; i++) {
+      particleArray.push({
+        position: [
+          Math.random() * 2 - 1,
+          Math.random() * 2 - 1,
+          Math.random() * 2 - 1,
+        ],
+        velocity: [
+          (Math.random() - 0.5) * 0.2,
+          (Math.random() - 0.5) * 0.2,
+          (Math.random() - 0.5) * 0.2,
+        ],
+      });
+    }
+    setParticles(particleArray);
+  };
+
+  const explodeParticles = () => {
+    gsap.to(textRef.current.material, {
+      opacity: 0,
+      duration: 0.5,
+    });
+
+    gsap.to(particlesRef.current, {
+      duration: 1,
+      x: () => Math.random() * 4 - 2,
+      y: () => Math.random() * 4 - 2,
+      z: () => Math.random() * 4 - 2,
+      opacity: 0,
+      ease: "power3.out",
+      onComplete: onAnimationEnd,
+    });
+  };
+
+  useFrame(() => {
+    particlesRef.current.forEach((p, index) => {
+      if (p && particles[index]) {
+        p.position.x += particles[index].velocity[0];
+        p.position.y += particles[index].velocity[1];
+        p.position.z += particles[index].velocity[2];
+      }
+    });
+  });
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      <Text ref={textRef} fontSize={1.5} position={[0, 0, 0]} color="white">
+        {text}
+      </Text>
+      {particles.map((p, index) => (
+        <mesh key={index} position={p.position} ref={(el) => (particlesRef.current[index] = el)}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshBasicMaterial color="white" transparent opacity={1} />
+        </mesh>
+      ))}
+    </>
+  );
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+const Page = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showFlag, setShowFlag] = useState(false);
+
+  const handleAnimationEnd = () => {
+    if (years[currentIndex] === "2025") {
+      setShowFlag(true); // Show the flag when reaching "2025"
+      return;
+    }
+    
+    setTimeout(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % years.length);
+    }, 500); // Wait before showing next number
+  };
+
+  return (
+    <div className="h-screen w-full flex justify-center items-center bg-black">
+      {!showFlag ? (
+        <Canvas>
+          <ambientLight intensity={1} />
+          <ExplodingText text={years[currentIndex]} onAnimationEnd={handleAnimationEnd} />
+        </Canvas>
+      ) : (
+       <>
+        <div className=" flex flex-col -space-y-[900px] w-full items-center relative">
+          <IndianFlag />
+          <IndianPlayer />
+         
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <p className="absolute bottom-10 left-1/2 -translate-x-1/2  text-[150px] font-extrabold bg-gradient-to-r from-orange-400 via-white to-green-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+  Winner
+</p>
+
+       </>
+      )}
     </div>
   );
-}
+};
+
+export default Page;
